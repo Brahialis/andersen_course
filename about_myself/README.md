@@ -9,6 +9,6 @@ Now I am interesting in DevOps methodology and want to become professional DevOp
 + It is always exciting for me to communicate and share experience with smart people.
 
 ### My expectations from this course:
-+ Better understanding what DevOps Engeeneer can do for his team and be more helpfull to improve overall team performance.
++ Better understanding what DevOps Engineer can do for his team and be more helpfull to improve overall team performance.
 + Improve my skills in automation tools and bash/python scripting.
 + Get practical skills from interesting tasks.
