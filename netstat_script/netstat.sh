@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 
-set -Eexuo pipefail
-
-# Along with "set -E" option, allows to catch ERR traps which do not fire in certain scenarios (even with "set -e")
-#trap ERR_TRAP ERR
-
-#ERR_TRAP () {
-#       trap - ERR
-#       echo "Something went wrong. Error trap fired, please investigate it!"
-#}
+set -exuo pipefail
 
 # sudo netstat -tunapl | awk '/firefox/ {print $5}' | cut -d: -f1 | sort | uniq -c | sort | tail -n5 | grep -oP '(\d+\.){3}\d+' | while read IP ; do whois $IP | awk -F':' '/^Organization/ {print $2}' ; done
 
@@ -17,27 +9,35 @@ echo=`which echo`
 netstat=`which netstat`
 awk=`which awk`
 sed=`which sed`
+whois=`which whois`
 
-# Choosing connection type
-echo "Please type PID or Program name"
-read -p "Please enter a PID or Program name:" type
-echo " You have entered $type"
-
-read -p " You must be root to run netstat properly. Do you want to run netstat with sudo (yes/no?) default - (yes): " become_root
-
-if become_root=yes
-    then echo "Running command as root, please enter your sudo password"
-    sudo netstat -tulnap
-else
-    echo " You must be root to run netstat properly"
+# Check if user has root priveleges.
+if  [[ $(id -u) != 0 ]]; then
+    echo "Be aware: this script is running netstat and requires to run it as sudo to be able to run it properly."
+    echo "Please run this script with sudo"
+    echo "Terminating and exiting...."
     exit 1
 fi
-#echo "Please make your choice: become root (yes) or run as default user (no))"
-#read become_root
 
+# Checking if needed programs are installed
+if [[ -z $netstat ]]; then
+    echo "Could not find netstat utility, please install it first!"
+    echo "Terminating and exiting...."
+    exit 1
+fi
 
+if [[ -z $whois ]]; then
+    echo "Could not find whois utility, please install it first!"
+    echo "Terminating and exiting...."
+    exit 1
+fi
 
+# Choosing connection type
 
+echo "Please type PID or Program name"
+read -p "Please enter a PID or Program name:" pid_name
+echo " You have entered $pid_name"
 
 #IP=$(netstat -tunapl | awk '/'$type'/ {print $5}' | cut -d: -f1 | sort | uniq -c | sort | tail -n5 | grep -oP '(\d+\.){3}\d+' | while read IP ; do whois $IP | awk -F':' '/^Organization/ {print $2}' ; done)
-#echo $IP
+# This script is running netstat and requires to run it as sudo to be able to run it properly
+
