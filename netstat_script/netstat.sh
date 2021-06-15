@@ -10,13 +10,12 @@ netstat=`which netstat`
 awk=`which awk`
 sed=`which sed`
 whois=`which whois`
+id=`which id`
 
 # Check if user has root priveleges.
 if  [[ $(id -u) != 0 ]]; then
     echo "Be aware: this script is running netstat and requires to run it as sudo to be able to run it properly."
-    echo "Please run this script with sudo"
-    echo "Terminating and exiting...."
-    exit 1
+    echo "Please run this script with sudo to get its full functionality."
 fi
 
 # Checking if needed programs are installed
@@ -32,12 +31,45 @@ if [[ -z $whois ]]; then
     exit 1
 fi
 
-# Choosing connection type
+# Choosing a PID or a Program name
+read -p "Please specify a PID or a Program name you want to see in the output (Default: all)" pid_name
+#echo $pid_name
 
-echo "Please type PID or Program name"
-read -p "Please enter a PID or Program name:" pid_name
-echo " You have entered $pid_name"
 
-#IP=$(netstat -tunapl | awk '/'$type'/ {print $5}' | cut -d: -f1 | sort | uniq -c | sort | tail -n5 | grep -oP '(\d+\.){3}\d+' | while read IP ; do whois $IP | awk -F':' '/^Organization/ {print $2}' ; done)
-# This script is running netstat and requires to run it as sudo to be able to run it properly
+
+# Choosing a connection type
+echo "Please enter a number (from 1 to 6) with the required connection type: "
+select le in "LISTEN" "ESTABLISHED" "TIME_WAIT" "CLOSE_WAIT" "CLOSED" "ALL"; do
+    case $le in
+        LISTEN) 
+          conn="LISTEN"
+	  echo "You have chosen to display only ${conn} connections."
+          ;;
+        ESTABLISHED) 
+          conn="ESTABLISHED"
+	  echo "You have chosen to display only ${conn} connections."
+          ;;
+        TIME_WAIT)
+	  conn="TIME_WAIT"
+ 	  echo "You have chosen to display only ${conn} connections."
+	  ;;
+	CLOSE_WAIT)
+	  conn="CLOSE_WAIT"
+  	  echo "You have chosen to display only ${conn} connections."
+	  ;;
+	CLOSED)
+	  conn="CLOSED"
+	  echo "You have chosen to display only ${conn} connections."
+	  ;;
+	ALL)
+          conn=''
+	  echo "You have chosen to display ALL connections."
+	  ;; 
+    esac
+break
+done
+
+# testing output
+IP=$(netstat -tunapl | awk -v pid_name="$pid_name" -v conn="$conn" '$0~pid_name && $0~conn {print $5}' )
+
 
