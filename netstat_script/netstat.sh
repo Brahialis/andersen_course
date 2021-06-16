@@ -32,10 +32,8 @@ if [[ -z $whois ]]; then
 fi
 
 # Choosing a PID or a Program name
-read -p "Please specify a PID or a Program name you want to see in the output (Default: all)" pid_name
-#echo $pid_name
-
-
+read -p "Please specify a PID or a Program name you would like to see in the output (Default is [ALL])" pid_name
+echo $pid_name
 
 # Choosing a connection type
 echo "Please enter a number (from 1 to 6) with the required connection type: "
@@ -69,7 +67,17 @@ select le in "LISTEN" "ESTABLISHED" "TIME_WAIT" "CLOSE_WAIT" "CLOSED" "ALL"; do
 break
 done
 
-# testing output
-IP=$(netstat -tunapl | awk -v pid_name="$pid_name" -v conn="$conn" '$0~pid_name && $0~conn {print $5}' )
+
+# Choosing a number of lines in the output 
+read -p "Please specify a number of lines you would like to see in the output (Default is [5] lines): " lines
+# Default value for lines
+lines=${lines:-5}
+echo "You have choosen to display $lines line(s) in the output."
+
+
+#IP=$(netstat -tunapl | awk -v pid_name="$pid_name" -v conn="$conn" '$0~pid_name && $0~conn {print $5}' | cut -d: -f1 )
+
+IP=$(netstat -tunapl | awk -v pid_name="$pid_name" -v conn="$conn" '$0~pid_name && $0~conn {print $5}' | cut -d: -f1 | sort | uniq -c | sort | tail -n ${lines})
+echo "$IP"
 
 
