@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -exuo pipefail
+set -euo pipefail
 
 # sudo netstat -tunapl | awk '/firefox/ {print $5}' | cut -d: -f1 | sort | uniq -c | sort | tail -n5 | grep -oP '(\d+\.){3}\d+' | while read IP ; do whois $IP | awk -F':' '/^Organization/ {print $2}' ; done
 
@@ -33,7 +33,6 @@ fi
 
 # Choosing a PID or a Program name
 read -p "Please specify a PID or a Program name you would like to see in the output (Default is [ALL])" pid_name
-echo $pid_name
 
 # Choosing a connection type
 echo "Please enter a number (from 1 to 6) with the required connection type: "
@@ -67,17 +66,25 @@ select le in "LISTEN" "ESTABLISHED" "TIME_WAIT" "CLOSE_WAIT" "CLOSED" "ALL"; do
 break
 done
 
-
 # Choosing a number of lines in the output 
 read -p "Please specify a number of lines you would like to see in the output (Default is [5] lines): " lines
 # Default value for lines
 lines=${lines:-5}
 echo "You have choosen to display $lines line(s) in the output."
 
+# IP list variable  
+IP_list=$(netstat -tunapl | awk -v pid_name="$pid_name" -v conn="$conn" '$0~pid_name && $0~conn {print $5}' | cut -d: -f1 | sort | uniq -c | sort | tail -n ${lines} )
 
-#IP=$(netstat -tunapl | awk -v pid_name="$pid_name" -v conn="$conn" '$0~pid_name && $0~conn {print $5}' | cut -d: -f1 )
+# Setting filter for whois output
+name_filter="Organization"
 
-IP=$(netstat -tunapl | awk -v pid_name="$pid_name" -v conn="$conn" '$0~pid_name && $0~conn {print $5}' | cut -d: -f1 | sort | uniq -c | sort | tail -n ${lines})
-echo "$IP"
-
+while read -r ip_list; do
+    IP=$( echo ${ip_list} | grep -oP '(\d+\.){3}\d+')
+    # Counting amount of connections
+    conn_amount=`echo ${ip_list} | awk '{print $1}'`
+    # Getting organization name from IP
+    org_name=`whois ${IP} | awk -F':' -v name_filter="${name_filter}" '$0~"^"name_filter {print $2}' | sed -e 's/^[ \t]*//' `
+    # Display info for user
+    echo "IP address ${IP} has ${conn_amount} connection(s) and belongs to ${org_name} "
+done <<< "${IP_list}"
 
